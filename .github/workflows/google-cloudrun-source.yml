@@ -31,13 +31,12 @@ name: 'Deploy to Cloud Run from Source'
 
 on:
   push:
-    branches:
-      - '"main"'
+    branches: ['main']
 
 env:
-  PROJECT_ID: 'my-project' # TODO: update to your Google Cloud project ID
-  REGION: 'us-central1' # TODO: update to your region
-  SERVICE: 'my-service' # TODO: update to your service name
+  PROJECT_ID: 'student-001000' # TODO: update to your Google Cloud project ID
+  REGION: 'europe-central2' # TODO: update to your region
+  SERVICE: 'ikea-users-app' # TODO: update to your service name
 
 jobs:
   deploy:
@@ -50,16 +49,22 @@ jobs:
     steps:
       - name: 'Checkout'
         uses: 'actions/checkout@692973e3d937129bcbf40652eb9f2f61becf3332' # actions/checkout@v4
+      
+      - name: Install Dependencies
+        working-directory: ./ikea-react-frontend
+        run: npm install
+    
+      - name: Build React App
+        working-directory: ./ikea-react-frontend
+        run: npm run build
 
-      # Configure Workload Identity Federation and generate an access token.
-      #
-      # See https://github.com/google-github-actions/auth for more options,
-      # including authenticating via a JSON credentials file.
-      - id: 'auth'
-        name: 'Authenticate to Google Cloud'
-        uses: 'google-github-actions/auth@f112390a2df9932162083945e46d439060d66ec2' # google-github-actions/auth@v2
+      # NOTE: Alternative option - authentication via credentials json
+      - name: Google Auth
+        id: auth
+        uses: 'google-github-actions/auth@v2'
         with:
-          workload_identity_provider: 'projects/123456789/locations/global/workloadIdentityPools/my-pool/providers/my-provider' # TODO: replace with your workload identity provider
+          credentials_json: '${{ secrets.GCP_CREDENTIALS }}'
+      
 
       - name: 'Deploy to Cloud Run'
         uses: 'google-github-actions/deploy-cloudrun@33553064113a37d688aa6937bacbdc481580be17' # google-github-actions/deploy-cloudrun@v2
